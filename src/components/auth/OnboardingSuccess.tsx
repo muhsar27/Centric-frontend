@@ -11,7 +11,7 @@ import { setCredentials } from '@/store/slices/authSlice';
 export default function OnboardingSuccess() {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const { role, signUp } = useAppSelector((state) => state.onboarding);
+  const { role, signUp, phone } = useAppSelector((state) => state.onboarding);
 
   const handleFinish = () => {
     dispatch(completeOnboarding());
@@ -19,9 +19,10 @@ export default function OnboardingSuccess() {
       setCredentials({
         user: {
           id: 'usr_' + Date.now(),
-          fullName: signUp.fullName || (role === 'sender' ? 'Tobi Afolayan' : 'Ridwan Kareem'),
+          fullName: signUp.fullName || (role === 'sender' ? 'Ciroma Adekunle' : 'Ridwan Kareem'),
           email: signUp.email || 'user@centric.africa',
           role,
+          phoneNumber: phone.phoneNumber || signUp.phoneNumber || '+234 801 234 5678',
           isVerified: true,
         },
         token: 'centric-jwt-auth-token',

@@ -17,6 +17,7 @@ const initialState: OnboardingState = {
   signUp: {
     fullName: '',
     email: '',
+    phoneNumber: '',
     password: '',
   },
   phone: {

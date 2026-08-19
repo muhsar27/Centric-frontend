@@ -3,10 +3,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Eye, EyeOff, Check, AlertCircle } from 'lucide-react';
+import { Eye, EyeOff, Check, AlertCircle, Phone } from 'lucide-react';
 import StepIndicator from './StepIndicator';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { updateSignUp, nextStep } from '@/store/slices/onboardingSlice';
+import { updateSignUp, updatePhone, nextStep } from '@/store/slices/onboardingSlice';
 import { useRegisterMutation } from '@/store/services/authApi';
 
 export default function SignUpForm() {
@@ -24,8 +24,8 @@ export default function SignUpForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signUp.fullName.trim() || !signUp.email.trim()) {
-      setErrorMsg('Please fill in all fields');
+    if (!signUp.fullName.trim() || !signUp.email.trim() || !signUp.phoneNumber?.trim()) {
+      setErrorMsg('Please fill in all fields including your phone number');
       return;
     }
     if (!hasMinLength || !hasNumber || !hasSpecial) {
@@ -33,9 +33,21 @@ export default function SignUpForm() {
       return;
     }
 
+    // Format phone number with country code if needed
+    let formattedPhone = signUp.phoneNumber.trim();
+    if (!formattedPhone.startsWith('+')) {
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '+234 ' + formattedPhone.slice(1);
+      } else {
+        formattedPhone = '+234 ' + formattedPhone;
+      }
+    }
+
+    dispatch(updatePhone({ phoneNumber: formattedPhone }));
+
     try {
       setErrorMsg('');
-      await register({ ...signUp, role }).unwrap();
+      await register({ ...signUp, phoneNumber: formattedPhone, role }).unwrap();
       dispatch(nextStep());
     } catch {
       // Proceed even on mock network failure
@@ -93,6 +105,30 @@ export default function SignUpForm() {
               className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-centric-green focus:ring-1 focus:ring-centric-green transition-all"
               required
             />
+          </div>
+
+          {/* Phone number input */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Phone number
+            </label>
+            <div className="relative flex">
+              <div className="inline-flex items-center gap-1.5 px-3 py-3 rounded-l-xl border border-r-0 border-slate-200 bg-slate-50 text-slate-600 text-sm font-medium select-none">
+                <span>🇳🇬</span>
+                <span className="text-xs font-semibold text-slate-700">+234</span>
+              </div>
+              <input
+                type="tel"
+                placeholder="801 234 5678"
+                value={signUp.phoneNumber || ''}
+                onChange={(e) => dispatch(updateSignUp({ phoneNumber: e.target.value }))}
+                className="w-full px-4 py-3 rounded-r-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-centric-green focus:ring-1 focus:ring-centric-green transition-all"
+                required
+              />
+            </div>
+            <span className="text-[11px] text-slate-400 mt-1 block">
+              We&apos;ll send an SMS verification code to this number
+            </span>
           </div>
 
           {/* Password input */}
