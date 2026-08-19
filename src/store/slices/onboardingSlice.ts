@@ -18,6 +18,7 @@ const initialState: OnboardingState = {
     fullName: '',
     email: '',
     password: '',
+    phone: '',
   },
   phone: {
     phoneNumber: '',
@@ -38,7 +39,7 @@ const initialState: OnboardingState = {
     homeAddress: '',
   },
   vehicle: {
-    vehicleType: 'bike',
+    vehicleType: 'none',
     make: '',
     model: '',
     plateNumber: '',

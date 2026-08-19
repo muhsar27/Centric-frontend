@@ -22,8 +22,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-slate-50 antialiased">
-      <body className="min-h-full flex flex-col font-sans text-slate-900">
+    <html lang="en" className="h-full bg-white antialiased">
+      <body className="min-h-full bg-white font-sans text-slate-900">
         <ReduxProvider>{children}</ReduxProvider>
       </body>
     </html>

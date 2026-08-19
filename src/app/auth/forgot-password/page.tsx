@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, CheckCircle2, MapPin, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import CentricLogo from '@/components/ui/CentricLogo';
 import { useForgotPasswordMutation } from '@/store/services/authApi';
 

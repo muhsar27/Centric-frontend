@@ -1,32 +1,46 @@
 import React from 'react';
+import { cn } from '@/lib/cn';
 
 interface CentricLogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
+  variant?: 'badge' | 'wordmark';
 }
 
-export default function CentricLogo({ className = '', size = 'md' }: CentricLogoProps) {
-  const sizes = {
-    sm: 'h-6',
-    md: 'h-8',
-    lg: 'h-10',
+export default function CentricLogo({
+  className = '',
+  size = 'md',
+  variant = 'badge',
+}: CentricLogoProps) {
+  const sizeMap = {
+    sm: variant === 'badge' ? 'px-3 py-1.5 text-sm' : 'text-2xl',
+    md: variant === 'badge' ? 'px-4 py-2 text-sm' : 'text-[2rem]',
+    lg: variant === 'badge' ? 'px-4.5 py-2 text-base' : 'text-[2.25rem]',
   };
 
-  return (
-    <div className={`flex items-center gap-2.5 ${className}`}>
-      <div className={`${sizes[size]} aspect-square relative flex items-center justify-center`}>
-        {/* Outer green ring */}
-        <div className="w-full h-full rounded-full bg-centric-green flex items-center justify-center p-1.5 shadow-sm">
-          {/* Inner white circle with pin logo */}
-          <div className="w-full h-full bg-white rounded-full flex items-center justify-center relative">
-            <div className="w-2.5 h-2.5 rounded-full bg-centric-green"></div>
-            <div className="absolute -top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-centric-green animate-ping"></div>
-          </div>
-        </div>
+  if (variant === 'wordmark') {
+    return (
+      <div
+        className={cn(
+          'inline-flex items-center text-slate-900 font-semibold tracking-[-0.04em] leading-none',
+          sizeMap[size],
+          className
+        )}
+      >
+        centric
       </div>
-      <span className="font-bold tracking-tight text-slate-900 text-xl font-sans">
-        Centric
-      </span>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        'inline-flex items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 font-semibold tracking-[-0.03em] shadow-[0_1px_0_rgba(15,23,42,0.02)]',
+        sizeMap[size],
+        className
+      )}
+    >
+      centric
     </div>
   );
 }

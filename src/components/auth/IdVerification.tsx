@@ -1,207 +1,158 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, Camera, FileText, Upload, Check } from 'lucide-react';
-import StepIndicator from './StepIndicator';
+import { Upload, ShieldCheck, FileText } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { updateIdVerification, nextStep } from '@/store/slices/onboardingSlice';
-import { useUploadDocumentMutation } from '@/store/services/authApi';
+import { completeOnboarding, nextStep, updateIdVerification } from '@/store/slices/onboardingSlice';
+import { setCredentials } from '@/store/slices/authSlice';
+import { Button } from '@/components/ui/Button';
+import { persistAuthSession, buildFallbackUser } from '@/lib/auth-storage';
+
+type UploadKey = 'id' | 'selfie' | 'proof';
+
+const rows: Array<{
+  key: UploadKey;
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+}> = [
+  {
+    key: 'id',
+    title: 'Upload a means of identification',
+    description: 'NIN, drivers license, passport',
+    icon: <Upload className="h-4 w-4" />,
+  },
+  {
+    key: 'selfie',
+    title: 'Selfie verification',
+    description: 'Take a selfie',
+    icon: <ShieldCheck className="h-4 w-4" />,
+  },
+  {
+    key: 'proof',
+    title: 'Proof of address',
+    description: 'Utility bill or bank statement',
+    icon: <FileText className="h-4 w-4" />,
+  },
+];
 
 export default function IdVerification() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
-  const { idVerification, role } = useAppSelector((state) => state.onboarding);
-  const [uploadDocument, { isLoading }] = useUploadDocumentMutation();
+  const auth = useAppSelector((state) => state.auth);
+  const { role, signUp, phone } = useAppSelector((state) => state.onboarding);
+  const fileInputs = useRef<Record<UploadKey, HTMLInputElement | null>>({
+    id: null,
+    selfie: null,
+    proof: null,
+  });
+  const [uploaded, setUploaded] = useState<Record<UploadKey, boolean>>({
+    id: false,
+    selfie: false,
+    proof: false,
+  });
 
-  const [activeUpload, setActiveUpload] = useState<string | null>(null);
+  const handleFileChange = (key: UploadKey, file?: File) => {
+    if (!file) return;
 
-  const handleSimulatedUpload = async (type: 'id' | 'selfie' | 'proof') => {
-    setActiveUpload(type);
-    try {
-      await uploadDocument({ file: 'mock-file-data', type }).unwrap();
-      if (type === 'id') dispatch(updateIdVerification({ isIdUploaded: true }));
-      if (type === 'selfie') dispatch(updateIdVerification({ isSelfieVerified: true }));
-      if (type === 'proof') dispatch(updateIdVerification({ isProofUploaded: true }));
-    } catch {
-      if (type === 'id') dispatch(updateIdVerification({ isIdUploaded: true }));
-      if (type === 'selfie') dispatch(updateIdVerification({ isSelfieVerified: true }));
-      if (type === 'proof') dispatch(updateIdVerification({ isProofUploaded: true }));
-    } finally {
-      setActiveUpload(null);
-    }
+    setUploaded((current) => ({ ...current, [key]: true }));
+    if (key === 'id') dispatch(updateIdVerification({ isIdUploaded: true }));
+    if (key === 'selfie') dispatch(updateIdVerification({ isSelfieVerified: true }));
+    if (key === 'proof') dispatch(updateIdVerification({ isProofUploaded: true }));
   };
 
-  const handleContinue = () => {
-    dispatch(nextStep());
+  const handleFinish = () => {
+    const completedUser = auth.user
+      ? { ...auth.user, role, isVerified: true }
+      : buildFallbackUser({
+          id: `usr_${Date.now()}`,
+          fullName: signUp.fullName,
+          email: signUp.email,
+          role,
+          phoneNumber: signUp.phone || phone.phoneNumber || undefined,
+        });
+
+    dispatch(
+      setCredentials({
+        user: completedUser,
+        token: auth.token ?? 'centric-session-token',
+      })
+    );
+    persistAuthSession({
+      user: completedUser,
+      token: auth.token ?? 'centric-session-token',
+    });
+
+    if (role === 'traveler') {
+      dispatch(nextStep());
+      return;
+    }
+
+    dispatch(completeOnboarding());
+    router.push('/dashboard');
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -12 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col h-full justify-between"
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.25 }}
     >
-      <div>
-        <StepIndicator
-          title="Verify your identity"
-          subtitle={
-            role === 'sender'
-              ? 'We take verification seriously to keep everyone safe'
-              : 'We need to verify you to keep our community safe'
-          }
-        />
+      <div className="text-center">
+        <h2 className="text-[2rem] font-semibold tracking-[-0.04em] text-slate-900 sm:text-[2.25rem]">
+          Verify your identity
+        </h2>
+      </div>
 
-        <div className="space-y-4 mt-6">
-          {/* Card 1: Upload ID card */}
+      <div className="mx-auto mt-12 max-w-[470px] space-y-3">
+        {rows.map((row) => (
           <div
-            onClick={() => handleSimulatedUpload('id')}
-            className={`p-4.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-              idVerification.isIdUploaded
-                ? 'border-centric-green bg-emerald-50/50 shadow-2xs'
-                : 'border-slate-200 bg-white hover:border-slate-300'
-            }`}
+            key={row.key}
+            className="flex h-[72px] items-center justify-between rounded-xl border border-slate-100 bg-white px-3.5 shadow-[0_1px_0_rgba(15,23,42,0.02)]"
           >
-            <div className="flex items-center gap-3.5">
-              <div
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-                  idVerification.isIdUploaded
-                    ? 'bg-centric-green text-white'
-                    : 'bg-emerald-100/70 text-centric-green'
-                }`}
-              >
-                <CreditCard className="w-5 h-5" />
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-700">
+                {row.icon}
               </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-900">Upload ID card</h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  National ID, Driver&apos;s License or Passport
+              <div className="min-w-0">
+                <h3 className="text-[15px] font-medium text-slate-900">
+                  {row.title}
+                </h3>
+                <p className="mt-1 text-[13px] leading-5 text-slate-500">
+                  {row.description}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {idVerification.isIdUploaded ? (
-                <div className="w-6 h-6 rounded-full bg-centric-green text-white flex items-center justify-center">
-                  <Check className="w-4 h-4 stroke-[3]" />
-                </div>
-              ) : (
-                <div className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-                  {activeUpload === 'id' ? (
-                    <span className="text-[10px] font-bold text-centric-green animate-pulse">
-                      Uploading...
-                    </span>
-                  ) : (
-                    <Upload className="w-4 h-4" />
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Card 2: Selfie verification */}
-          <div
-            onClick={() => handleSimulatedUpload('selfie')}
-            className={`p-4.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-              idVerification.isSelfieVerified
-                ? 'border-centric-green bg-emerald-50/50 shadow-2xs'
-                : 'border-slate-200 bg-white hover:border-slate-300'
-            }`}
-          >
-            <div className="flex items-center gap-3.5">
-              <div
-                className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-                  idVerification.isSelfieVerified
-                    ? 'bg-centric-green text-white'
-                    : 'bg-emerald-100/70 text-centric-green'
-                }`}
+            <div>
+              <input
+                ref={(element) => {
+                  fileInputs.current[row.key] = element;
+                }}
+                type="file"
+                className="sr-only"
+                onChange={(event) => handleFileChange(row.key, event.target.files?.[0])}
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => fileInputs.current[row.key]?.click()}
+                className="h-10 rounded-full px-4 text-[14px] font-medium shadow-none"
               >
-                <Camera className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className="text-sm font-bold text-slate-900">Selfie verification</h4>
-                <p className="text-xs text-slate-500 mt-0.5">Take a quick selfie</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {idVerification.isSelfieVerified ? (
-                <div className="w-6 h-6 rounded-full bg-centric-green text-white flex items-center justify-center">
-                  <Check className="w-4 h-4 stroke-[3]" />
-                </div>
-              ) : (
-                <div className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-                  {activeUpload === 'selfie' ? (
-                    <span className="text-[10px] font-bold text-centric-green animate-pulse">
-                      Processing...
-                    </span>
-                  ) : (
-                    <Upload className="w-4 h-4" />
-                  )}
-                </div>
-              )}
+                {uploaded[row.key] ? 'Uploaded' : 'Upload'}
+              </Button>
             </div>
           </div>
+        ))}
 
-          {/* Card 3: Proof of address (Sender only) */}
-          {role === 'sender' && (
-            <div
-              onClick={() => handleSimulatedUpload('proof')}
-              className={`p-4.5 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between ${
-                idVerification.isProofUploaded
-                  ? 'border-centric-green bg-emerald-50/50 shadow-2xs'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center gap-3.5">
-                <div
-                  className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
-                    idVerification.isProofUploaded
-                      ? 'bg-centric-green text-white'
-                      : 'bg-emerald-100/70 text-centric-green'
-                  }`}
-                >
-                  <FileText className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-bold text-slate-900">Proof of address</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Utility bill or bank statement
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {idVerification.isProofUploaded ? (
-                  <div className="w-6 h-6 rounded-full bg-centric-green text-white flex items-center justify-center">
-                    <Check className="w-4 h-4 stroke-[3]" />
-                  </div>
-                ) : (
-                  <div className="p-2 rounded-xl bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-                    {activeUpload === 'proof' ? (
-                      <span className="text-[10px] font-bold text-centric-green animate-pulse">
-                        Uploading...
-                      </span>
-                    ) : (
-                      <Upload className="w-4 h-4" />
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+        <div className="pt-8">
+          <Button onClick={handleFinish} className="h-[53px] w-full text-base">
+            {role === 'traveler' ? 'Next: Vehicle Details' : 'Finish'}
+          </Button>
         </div>
-      </div>
-
-      <div className="pt-6">
-        <button
-          onClick={handleContinue}
-          disabled={isLoading}
-          className="w-full py-3.5 px-6 rounded-2xl bg-centric-green hover:bg-centric-green-dark text-white font-semibold text-base shadow-centric transition-all cursor-pointer"
-        >
-          Continue
-        </button>
       </div>
     </motion.div>
   );

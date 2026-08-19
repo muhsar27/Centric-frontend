@@ -6,6 +6,7 @@ export interface SignUpFormData {
   fullName: string;
   email: string;
   password: string;
+  phone: string;
 }
 
 export interface PhoneVerificationData {
@@ -30,7 +31,7 @@ export interface AddressData {
 }
 
 export interface VehicleInformationData {
-  vehicleType: 'bike' | 'car' | 'van';
+  vehicleType: 'none' | 'bike' | 'car' | 'van' | 'motorcycle';
   make: string;
   model: string;
   plateNumber: string;

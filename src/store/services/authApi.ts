@@ -1,59 +1,61 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { SignUpFormData, UserProfile, UserRole } from '@/types/auth';
+import { SignUpFormData, UserRole } from '@/types/auth';
+import { readAuthSession } from '@/lib/auth-storage';
+
+export interface BackendUser {
+  _id: string;
+  name?: string;
+  email?: string;
+  role?: 'SENDER' | 'TRAVELER' | string;
+  phone?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  token: string;
+  data?: {
+    user?: BackendUser;
+  };
+  message?: string;
+}
 
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.centric.africa/v1',
-    prepareHeaders: (headers) => {
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
+    baseQuery: fetchBaseQuery({
+      baseUrl:
+        process.env.NEXT_PUBLIC_API_URL ||
+        'https://centric-backend-im3l.onrender.com/api/v1',
+      prepareHeaders: (headers) => {
+        const token = readAuthSession()?.token ?? null;
+        if (token) {
+          headers.set('authorization', `Bearer ${token}`);
+        }
       return headers;
     },
   }),
   endpoints: (builder) => ({
-    login: builder.mutation<
-      { user: UserProfile; token: string },
-      { email: string; password: string }
-    >({
-      async queryFn(arg) {
-        await new Promise((res) => setTimeout(res, 500));
-        return {
-          data: {
-            user: {
-              id: 'user_123',
-              fullName: 'Tobi Afolayan',
-              email: arg.email,
-              role: 'sender',
-              isVerified: true,
-            },
-            token: 'mock-jwt-token-centric',
-          },
-        };
-      },
+    login: builder.mutation<AuthResponse, { email: string; password: string }>({
+      query: (body) => ({
+        url: '/auth/login',
+        method: 'POST',
+        body,
+      }),
     }),
 
-    register: builder.mutation<
-      { user: UserProfile; token: string },
-      SignUpFormData & { role: UserRole }
-    >({
-      async queryFn(arg) {
-        await new Promise((res) => setTimeout(res, 500));
-        return {
-          data: {
-            user: {
-              id: 'user_' + Date.now(),
-              fullName: arg.fullName,
-              email: arg.email,
-              role: arg.role,
-              isVerified: false,
-            },
-            token: 'mock-jwt-token-centric',
-          },
-        };
-      },
+    register: builder.mutation<AuthResponse, SignUpFormData & { role: UserRole }>({
+      query: ({ fullName, email, password, role, phone }) => ({
+        url: '/auth/register',
+        method: 'POST',
+        body: {
+          name: fullName,
+          email,
+          password,
+          role: role.toUpperCase(),
+          phone,
+        },
+      }),
     }),
 
     sendOtp: builder.mutation<{ message: string; expiresIn: number }, { phoneNumber: string }>({
