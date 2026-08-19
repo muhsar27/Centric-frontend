@@ -37,7 +37,7 @@ export default function SignInPage() {
         setCredentials({
           user: {
             id: 'usr_signin',
-            fullName: 'Tobi Afolayan',
+            fullName: 'Ciroma Adekunle',
             email,
             role: 'sender',
             isVerified: true,

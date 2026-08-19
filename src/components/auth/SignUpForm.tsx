@@ -72,7 +72,7 @@ export default function SignUpForm() {
             </label>
             <input
               type="text"
-              placeholder="e.g. Tobi Afolayan"
+              placeholder="e.g. Ciroma Adekunle"
               value={signUp.fullName}
               onChange={(e) => dispatch(updateSignUp({ fullName: e.target.value }))}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-centric-green focus:ring-1 focus:ring-centric-green transition-all"
@@ -87,7 +87,7 @@ export default function SignUpForm() {
             </label>
             <input
               type="email"
-              placeholder="tobiafolayan@gmail.com"
+              placeholder="ciromaadekunle@gmail.com"
               value={signUp.email}
               onChange={(e) => dispatch(updateSignUp({ email: e.target.value }))}
               className="w-full px-4 py-3 rounded-xl border border-slate-200 text-slate-900 text-sm focus:outline-none focus:border-centric-green focus:ring-1 focus:ring-centric-green transition-all"
@@ -126,14 +126,12 @@ export default function SignUpForm() {
           {/* Password Criteria List */}
           <div className="space-y-1.5 pt-1">
             <div
-              className={`flex items-center gap-2 text-xs transition-colors ${
-                hasMinLength ? 'text-centric-green font-medium' : 'text-slate-400'
-              }`}
+              className={`flex items-center gap-2 text-xs transition-colors ${hasMinLength ? 'text-centric-green font-medium' : 'text-slate-400'
+                }`}
             >
               <div
-                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${
-                  hasMinLength ? 'bg-centric-green text-white' : 'bg-slate-200'
-                }`}
+                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${hasMinLength ? 'bg-centric-green text-white' : 'bg-slate-200'
+                  }`}
               >
                 <Check className="w-2.5 h-2.5 stroke-[3]" />
               </div>
@@ -141,14 +139,12 @@ export default function SignUpForm() {
             </div>
 
             <div
-              className={`flex items-center gap-2 text-xs transition-colors ${
-                hasNumber ? 'text-centric-green font-medium' : 'text-slate-400'
-              }`}
+              className={`flex items-center gap-2 text-xs transition-colors ${hasNumber ? 'text-centric-green font-medium' : 'text-slate-400'
+                }`}
             >
               <div
-                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${
-                  hasNumber ? 'bg-centric-green text-white' : 'bg-slate-200'
-                }`}
+                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${hasNumber ? 'bg-centric-green text-white' : 'bg-slate-200'
+                  }`}
               >
                 <Check className="w-2.5 h-2.5 stroke-[3]" />
               </div>
@@ -156,14 +152,12 @@ export default function SignUpForm() {
             </div>
 
             <div
-              className={`flex items-center gap-2 text-xs transition-colors ${
-                hasSpecial ? 'text-centric-green font-medium' : 'text-slate-400'
-              }`}
+              className={`flex items-center gap-2 text-xs transition-colors ${hasSpecial ? 'text-centric-green font-medium' : 'text-slate-400'
+                }`}
             >
               <div
-                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${
-                  hasSpecial ? 'bg-centric-green text-white' : 'bg-slate-200'
-                }`}
+                className={`w-3.5 h-3.5 rounded-full flex items-center justify-center ${hasSpecial ? 'bg-centric-green text-white' : 'bg-slate-200'
+                  }`}
               >
                 <Check className="w-2.5 h-2.5 stroke-[3]" />
               </div>
